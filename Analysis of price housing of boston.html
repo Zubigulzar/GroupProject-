@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Analysisi of price of housing Boston</title>
+  <meta charset="utf-8">
+  <meta name="description" content="Analysisi of price of housing Boston">
+  <meta name="author" content="Giusti Elena">
+  <meta name="generator" content="slidify" />
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  <link rel="stylesheet" href="http://slidifylibraries2.googlecode.com/git/inst/libraries/frameworks/io2012/css/default.css" media="all" >
+  <link rel="stylesheet" href="http://slidifylibraries2.googlecode.com/git/inst/libraries/frameworks/io2012/css/phone.css" 
+    media="only screen and (max-device-width: 480px)" >
+  <link rel="stylesheet" href="http://slidifylibraries2.googlecode.com/git/inst/libraries/frameworks/io2012/css/slidify.css" >
+  <link rel="stylesheet" href="http://slidifylibraries2.googlecode.com/git/inst/libraries/highlighters/highlight.js/css/tomorrow.css" />
+  <base target="_blank"> <!-- This amazingness opens all links in a new tab. -->  
+  
+  <!-- Grab CDN jQuery, fall back to local if offline -->
+  <script src="http://ajax.aspnetcdn.com/ajax/jQuery/jquery-1.7.min.js"></script>
+  <script>window.jQuery || document.write('<script src="http://slidifylibraries2.googlecode.com/git/inst/libraries/widgets/quiz/js/jquery.js"><\/script>')</script> 
+  <script data-main="http://slidifylibraries2.googlecode.com/git/inst/libraries/frameworks/io2012/js/slides" 
+    src="http://slidifylibraries2.googlecode.com/git/inst/libraries/frameworks/io2012/js/require-1.0.8.min.js">
+  </script>
+  
+  
+
+</head>
+<body style="opacity: 0">
+  <slides class="layout-widescreen">
+    
+    <!-- LOGO SLIDE -->
+        <slide class="title-slide segue nobackground">
+  <hgroup class="auto-fadein">
+    <h1>Analysisi of price of housing Boston</h1>
+    <h2></h2>
+    <p>Giusti Elena<br/></p>
+  </hgroup>
+  <article></article>  
+</slide>
+    
+
+    <!-- SLIDES -->
+    <slide class="" id="slide-1" style="background:;">
+  <article data-timings="">
+    <p>##This doccument is the result of a Survey among 506 respondent
+ This dataset was taken from the StatLib library which is
+maintained at Carnegie Mellon University
+<br>Number of Instances: 506<br>
+<br>   Number of Attributes: 13 continuous attributes (including &quot;class&quot;
+attribute &quot;MEDV&quot;), 1 binary-valued attribute </p>
+
+<p><br> 1. CRIM      per capita crime rate by town
+    2. ZN        proportion of residential land zoned for lots over 
+                 25,000 sq.ft.
+    3. INDUS     proportion of non-retail business acres per town
+    4. CHAS      Charles River dummy variable (= 1 if tract bounds 
+                 river; 0 otherwise)
+    5. NOX       nitric oxides concentration (parts per 10 million)
+    6. RM        average number of rooms per dwelling
+    7. AGE       proportion of owner-occupied units built prior to 1940
+    8. DIS       weighted distances to five Boston employment centres
+    9. RAD       index of accessibility to radial highways
+    10. TAX      full-value property-tax rate per $10,000
+    11. PTRATIO  pupil-teacher ratio by town
+    12. B        1000(Bk - 0.63)<sup>2</sup> where Bk is the proportion of blacks 
+                 by town
+    13. LSTAT    % lower status of the population
+    14. MEDV     Median value of owner-occupied homes in $1000&#39;s</p>
+
+<pre><code>Target variable to predict: pricing of house MEDIAN
+</code></pre>
+
+<pre><code class="r">myData &lt;- read.csv(file = &quot;DATA/housing.data.csv&quot;, header = TRUE, sep=&quot;;&quot;)
+
+View(myData, header=FALSE)
+</code></pre>
+
+<pre><code>## Error in View(myData, header = FALSE): unused argument (header = FALSE)
+</code></pre>
+
+<pre><code class="r">Price_of_Houses &lt;- myData[,14]
+ID&lt;-c(1:506)
+MyDataID &lt;-cbind(ID,myData)
+plot(MyDataID[,c(1,14)])
+</code></pre>
+
+<p><img src="data:image/png;base64,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" alt="plot of chunk unnamed-chunk-1"></p>
+
+<pre><code class="r">summary(MyDataID[,14])
+</code></pre>
+
+<pre><code>##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+##    1.73    6.95   11.36   12.65   16.96   37.97
+</code></pre>
+
+<p>####Questions</p>
+
+<p><br>1.What are the main factors that influence the price of house in Boston?
+<br>2.Which are the main cluster of houses that can be identify?
+<br>3.What is the best prediction of the relative importance of those factors?</p>
+
+<h2>Step 1: Confirm data is metric</h2>
+
+<pre><code>##  [1] &quot;ID&quot;        &quot;X1..CRIM&quot;  &quot;X2..ZN&quot;    &quot;X3..INDUS&quot; &quot;X4..CHAS&quot; 
+##  [6] &quot;X5..NOX&quot;   &quot;X6..RM&quot;    &quot;X7..AGE&quot;   &quot;X8..DIS&quot;   &quot;X9..RAD&quot;  
+## [11] &quot;X10..TAX&quot;  &quot;X11..PTRA&quot; &quot;X12..B&quot;    &quot;X13..LSTA&quot; &quot;X14..MEDV&quot;
+</code></pre>
+
+<h2>Step 1: Confirm data is metric</h2>
+
+<pre><code class="r">knitr::kable(round(my_summary(ProjectDataFactor), 2))
+</code></pre>
+
+<table><thead>
+<tr>
+<th align="left"></th>
+<th align="right">min</th>
+<th align="right">25 percent</th>
+<th align="right">median</th>
+<th align="right">mean</th>
+<th align="right">75 percent</th>
+<th align="right">max</th>
+<th align="right">std</th>
+</tr>
+</thead><tbody>
+<tr>
+<td align="left">ID</td>
+<td align="right">1.00</td>
+<td align="right">127.25</td>
+<td align="right">253.50</td>
+<td align="right">253.50</td>
+<td align="right">379.75</td>
+<td align="right">506.00</td>
+<td align="right">146.21</td>
+</tr>
+<tr>
+<td align="left">X1..CRIM</td>
+<td align="right">1.00</td>
+<td align="right">126.25</td>
+<td align="right">252.50</td>
+<td align="right">252.22</td>
+<td align="right">377.75</td>
+<td align="right">504.00</td>
+<td align="right">145.81</td>
+</tr>
+<tr>
+<td align="left">X2..ZN</td>
+<td align="right">0.00</td>
+<td align="right">0.00</td>
+<td align="right">0.00</td>
+<td align="right">11.36</td>
+<td align="right">12.50</td>
+<td align="right">100.00</td>
+<td align="right">23.32</td>
+</tr>
+<tr>
+<td align="left">X3..INDUS</td>
+<td align="right">0.46</td>
+<td align="right">5.19</td>
+<td align="right">9.69</td>
+<td align="right">11.14</td>
+<td align="right">18.10</td>
+<td align="right">27.74</td>
+<td align="right">6.86</td>
+</tr>
+<tr>
+<td align="left">X4..CHAS</td>
+<td align="right">0.00</td>
+<td align="right">0.00</td>
+<td align="right">0.00</td>
+<td align="right">0.07</td>
+<td align="right">0.00</td>
+<td align="right">1.00</td>
+<td align="right">0.25</td>
+</tr>
+<tr>
+<td align="left">X5..NOX</td>
+<td align="right">0.38</td>
+<td align="right">0.45</td>
+<td align="right">0.54</td>
+<td align="right">0.55</td>
+<td align="right">0.62</td>
+<td align="right">0.87</td>
+<td align="right">0.12</td>
+</tr>
+<tr>
+<td align="left">X6..RM</td>
+<td align="right">35.61</td>
+<td align="right">58.86</td>
+<td align="right">62.09</td>
+<td align="right">62.85</td>
+<td align="right">66.23</td>
+<td align="right">87.80</td>
+<td align="right">7.03</td>
+</tr>
+<tr>
+<td align="left">X7..AGE</td>
+<td align="right">2.90</td>
+<td align="right">45.02</td>
+<td align="right">77.50</td>
+<td align="right">68.57</td>
+<td align="right">94.07</td>
+<td align="right">100.00</td>
+<td align="right">28.15</td>
+</tr>
+<tr>
+<td align="left">X8..DIS</td>
+<td align="right">11.30</td>
+<td align="right">21.00</td>
+<td align="right">32.07</td>
+<td align="right">37.95</td>
+<td align="right">51.88</td>
+<td align="right">121.27</td>
+<td align="right">21.06</td>
+</tr>
+<tr>
+<td align="left">X9..RAD</td>
+<td align="right">1.00</td>
+<td align="right">4.00</td>
+<td align="right">5.00</td>
+<td align="right">9.55</td>
+<td align="right">24.00</td>
+<td align="right">24.00</td>
+<td align="right">8.71</td>
+</tr>
+<tr>
+<td align="left">X10..TAX</td>
+<td align="right">187.00</td>
+<td align="right">279.00</td>
+<td align="right">330.00</td>
+<td align="right">408.24</td>
+<td align="right">666.00</td>
+<td align="right">711.00</td>
+<td align="right">168.54</td>
+</tr>
+<tr>
+<td align="left">X11..PTRA</td>
+<td align="right">12.60</td>
+<td align="right">17.40</td>
+<td align="right">19.05</td>
+<td align="right">18.46</td>
+<td align="right">20.20</td>
+<td align="right">22.00</td>
+<td align="right">2.16</td>
+</tr>
+<tr>
+<td align="left">X12..B</td>
+<td align="right">0.32</td>
+<td align="right">375.38</td>
+<td align="right">391.44</td>
+<td align="right">356.67</td>
+<td align="right">396.23</td>
+<td align="right">396.90</td>
+<td align="right">91.29</td>
+</tr>
+<tr>
+<td align="left">X13..LSTA</td>
+<td align="right">1.73</td>
+<td align="right">6.95</td>
+<td align="right">11.36</td>
+<td align="right">12.65</td>
+<td align="right">16.96</td>
+<td align="right">37.97</td>
+<td align="right">7.14</td>
+</tr>
+<tr>
+<td align="left">X14..MEDV</td>
+<td align="right">5.00</td>
+<td align="right">17.02</td>
+<td align="right">21.20</td>
+<td align="right">22.53</td>
+<td align="right">25.00</td>
+<td align="right">50.00</td>
+<td align="right">9.20</td>
+</tr>
+</tbody></table>
+
+<h2>Step 2: Scale the  data</h2>
+
+<pre><code class="r">ProjectDatafactor_scaled = apply(ProjectDataFactor, 2, function(r) {
+    if (sd(r) != 0) 
+        res = (r - mean(r))/sd(r) else res = 0 * r
+    res
+})
+</code></pre>
+
+<p>Notice now the summary statistics of the scaled dataset:</p>
+
+<pre><code class="r">knitr::kable(round(my_summary(ProjectDatafactor_scaled), 2))
+</code></pre>
+
+<table><thead>
+<tr>
+<th align="left"></th>
+<th align="right">min</th>
+<th align="right">25 percent</th>
+<th align="right">median</th>
+<th align="right">mean</th>
+<th align="right">75 percent</th>
+<th align="right">max</th>
+<th align="right">std</th>
+</tr>
+</thead><tbody>
+<tr>
+<td align="left">ID</td>
+<td align="right">-1.73</td>
+<td align="right">-0.86</td>
+<td align="right">0.00</td>
+<td align="right">0</td>
+<td align="right">0.86</td>
+<td align="right">1.73</td>
+<td align="right">1</td>
+</tr>
+<tr>
+<td align="left">X1..CRIM</td>
+<td align="right">-1.72</td>
+<td align="right">-0.86</td>
+<td align="right">0.00</td>
+<td align="right">0</td>
+<td align="right">0.86</td>
+<td align="right">1.73</td>
+<td align="right">1</td>
+</tr>
+<tr>
+<td align="left">X2..ZN</td>
+<td align="right">-0.49</td>
+<td align="right">-0.49</td>
+<td align="right">-0.49</td>
+<td align="right">0</td>
+<td align="right">0.05</td>
+<td align="right">3.80</td>
+<td align="right">1</td>
+</tr>
+<tr>
+<td align="left">X3..INDUS</td>
+<td align="right">-1.56</td>
+<td align="right">-0.87</td>
+<td align="right">-0.21</td>
+<td align="right">0</td>
+<td align="right">1.01</td>
+<td align="right">2.42</td>
+<td align="right">1</td>
+</tr>
+<tr>
+<td align="left">X4..CHAS</td>
+<td align="right">-0.27</td>
+<td align="right">-0.27</td>
+<td align="right">-0.27</td>
+<td align="right">0</td>
+<td align="right">-0.27</td>
+<td align="right">3.66</td>
+<td align="right">1</td>
+</tr>
+<tr>
+<td align="left">X5..NOX</td>
+<td align="right">-1.46</td>
+<td align="right">-0.91</td>
+<td align="right">-0.14</td>
+<td align="right">0</td>
+<td align="right">0.60</td>
+<td align="right">2.73</td>
+<td align="right">1</td>
+</tr>
+<tr>
+<td align="left">X6..RM</td>
+<td align="right">-3.88</td>
+<td align="right">-0.57</td>
+<td align="right">-0.11</td>
+<td align="right">0</td>
+<td align="right">0.48</td>
+<td align="right">3.55</td>
+<td align="right">1</td>
+</tr>
+<tr>
+<td align="left">X7..AGE</td>
+<td align="right">-2.33</td>
+<td align="right">-0.84</td>
+<td align="right">0.32</td>
+<td align="right">0</td>
+<td align="right">0.91</td>
+<td align="right">1.12</td>
+<td align="right">1</td>
+</tr>
+<tr>
+<td align="left">X8..DIS</td>
+<td align="right">-1.27</td>
+<td align="right">-0.80</td>
+<td align="right">-0.28</td>
+<td align="right">0</td>
+<td align="right">0.66</td>
+<td align="right">3.96</td>
+<td align="right">1</td>
+</tr>
+<tr>
+<td align="left">X9..RAD</td>
+<td align="right">-0.98</td>
+<td align="right">-0.64</td>
+<td align="right">-0.52</td>
+<td align="right">0</td>
+<td align="right">1.66</td>
+<td align="right">1.66</td>
+<td align="right">1</td>
+</tr>
+<tr>
+<td align="left">X10..TAX</td>
+<td align="right">-1.31</td>
+<td align="right">-0.77</td>
+<td align="right">-0.46</td>
+<td align="right">0</td>
+<td align="right">1.53</td>
+<td align="right">1.80</td>
+<td align="right">1</td>
+</tr>
+<tr>
+<td align="left">X11..PTRA</td>
+<td align="right">-2.70</td>
+<td align="right">-0.49</td>
+<td align="right">0.27</td>
+<td align="right">0</td>
+<td align="right">0.81</td>
+<td align="right">1.64</td>
+<td align="right">1</td>
+</tr>
+<tr>
+<td align="left">X12..B</td>
+<td align="right">-3.90</td>
+<td align="right">0.20</td>
+<td align="right">0.38</td>
+<td align="right">0</td>
+<td align="right">0.43</td>
+<td align="right">0.44</td>
+<td align="right">1</td>
+</tr>
+<tr>
+<td align="left">X13..LSTA</td>
+<td align="right">-1.53</td>
+<td align="right">-0.80</td>
+<td align="right">-0.18</td>
+<td align="right">0</td>
+<td align="right">0.60</td>
+<td align="right">3.55</td>
+<td align="right">1</td>
+</tr>
+<tr>
+<td align="left">X14..MEDV</td>
+<td align="right">-1.91</td>
+<td align="right">-0.60</td>
+<td align="right">-0.14</td>
+<td align="right">0</td>
+<td align="right">0.27</td>
+<td align="right">2.99</td>
+<td align="right">1</td>
+</tr>
+</tbody></table>
+
+<h2>Step 3:  Check correlations</h2>
+
+<p>Check for correlation</p>
+
+<pre><code class="r">thecor = round(cor(ProjectDataFactor),2)
+colnames(thecor)&lt;-colnames(ProjectDataFactor)
+rownames(thecor)&lt;-colnames(ProjectDataFactor)
+
+knitr::kable(round(thecor,2))
+</code></pre>
+
+<table><thead>
+<tr>
+<th align="left"></th>
+<th align="right">ID</th>
+<th align="right">X1..CRIM</th>
+<th align="right">X2..ZN</th>
+<th align="right">X3..INDUS</th>
+<th align="right">X4..CHAS</th>
+<th align="right">X5..NOX</th>
+<th align="right">X6..RM</th>
+<th align="right">X7..AGE</th>
+<th align="right">X8..DIS</th>
+<th align="right">X9..RAD</th>
+<th align="right">X10..TAX</th>
+<th align="right">X11..PTRA</th>
+<th align="right">X12..B</th>
+<th align="right">X13..LSTA</th>
+<th align="right">X14..MEDV</th>
+</tr>
+</thead><tbody>
+<tr>
+<td align="left">ID</td>
+<td align="right">1.00</td>
+<td align="right">0.42</td>
+<td align="right">-0.10</td>
+<td align="right">0.40</td>
+<td align="right">0.00</td>
+<td align="right">0.40</td>
+<td align="right">-0.08</td>
+<td align="right">0.20</td>
+<td align="right">-0.30</td>
+<td align="right">0.69</td>
+<td align="right">0.67</td>
+<td align="right">0.29</td>
+<td align="right">-0.30</td>
+<td align="right">0.26</td>
+<td align="right">-0.23</td>
+</tr>
+<tr>
+<td align="left">X1..CRIM</td>
+<td align="right">0.42</td>
+<td align="right">1.00</td>
+<td align="right">-0.56</td>
+<td align="right">0.72</td>
+<td align="right">0.08</td>
+<td align="right">0.79</td>
+<td align="right">-0.27</td>
+<td align="right">0.66</td>
+<td align="right">-0.67</td>
+<td align="right">0.74</td>
+<td align="right">0.73</td>
+<td align="right">0.34</td>
+<td align="right">-0.38</td>
+<td align="right">0.55</td>
+<td align="right">-0.38</td>
+</tr>
+<tr>
+<td align="left">X2..ZN</td>
+<td align="right">-0.10</td>
+<td align="right">-0.56</td>
+<td align="right">1.00</td>
+<td align="right">-0.53</td>
+<td align="right">-0.04</td>
+<td align="right">-0.52</td>
+<td align="right">0.31</td>
+<td align="right">-0.57</td>
+<td align="right">0.66</td>
+<td align="right">-0.31</td>
+<td align="right">-0.31</td>
+<td align="right">-0.39</td>
+<td align="right">0.18</td>
+<td align="right">-0.41</td>
+<td align="right">0.36</td>
+</tr>
+<tr>
+<td align="left">X3..INDUS</td>
+<td align="right">0.40</td>
+<td align="right">0.72</td>
+<td align="right">-0.53</td>
+<td align="right">1.00</td>
+<td align="right">0.06</td>
+<td align="right">0.76</td>
+<td align="right">-0.39</td>
+<td align="right">0.64</td>
+<td align="right">-0.71</td>
+<td align="right">0.60</td>
+<td align="right">0.72</td>
+<td align="right">0.38</td>
+<td align="right">-0.36</td>
+<td align="right">0.60</td>
+<td align="right">-0.48</td>
+</tr>
+<tr>
+<td align="left">X4..CHAS</td>
+<td align="right">0.00</td>
+<td align="right">0.08</td>
+<td align="right">-0.04</td>
+<td align="right">0.06</td>
+<td align="right">1.00</td>
+<td align="right">0.09</td>
+<td align="right">0.09</td>
+<td align="right">0.09</td>
+<td align="right">-0.10</td>
+<td align="right">-0.01</td>
+<td align="right">-0.04</td>
+<td align="right">-0.12</td>
+<td align="right">0.05</td>
+<td align="right">-0.05</td>
+<td align="right">0.18</td>
+</tr>
+<tr>
+<td align="left">X5..NOX</td>
+<td align="right">0.40</td>
+<td align="right">0.79</td>
+<td align="right">-0.52</td>
+<td align="right">0.76</td>
+<td align="right">0.09</td>
+<td align="right">1.00</td>
+<td align="right">-0.30</td>
+<td align="right">0.73</td>
+<td align="right">-0.77</td>
+<td align="right">0.61</td>
+<td align="right">0.67</td>
+<td align="right">0.19</td>
+<td align="right">-0.38</td>
+<td align="right">0.59</td>
+<td align="right">-0.43</td>
+</tr>
+<tr>
+<td align="left">X6..RM</td>
+<td align="right">-0.08</td>
+<td align="right">-0.27</td>
+<td align="right">0.31</td>
+<td align="right">-0.39</td>
+<td align="right">0.09</td>
+<td align="right">-0.30</td>
+<td align="right">1.00</td>
+<td align="right">-0.24</td>
+<td align="right">0.21</td>
+<td align="right">-0.21</td>
+<td align="right">-0.29</td>
+<td align="right">-0.36</td>
+<td align="right">0.13</td>
+<td align="right">-0.61</td>
+<td align="right">0.70</td>
+</tr>
+<tr>
+<td align="left">X7..AGE</td>
+<td align="right">0.20</td>
+<td align="right">0.66</td>
+<td align="right">-0.57</td>
+<td align="right">0.64</td>
+<td align="right">0.09</td>
+<td align="right">0.73</td>
+<td align="right">-0.24</td>
+<td align="right">1.00</td>
+<td align="right">-0.75</td>
+<td align="right">0.46</td>
+<td align="right">0.51</td>
+<td align="right">0.26</td>
+<td align="right">-0.27</td>
+<td align="right">0.60</td>
+<td align="right">-0.38</td>
+</tr>
+<tr>
+<td align="left">X8..DIS</td>
+<td align="right">-0.30</td>
+<td align="right">-0.67</td>
+<td align="right">0.66</td>
+<td align="right">-0.71</td>
+<td align="right">-0.10</td>
+<td align="right">-0.77</td>
+<td align="right">0.21</td>
+<td align="right">-0.75</td>
+<td align="right">1.00</td>
+<td align="right">-0.49</td>
+<td align="right">-0.53</td>
+<td align="right">-0.23</td>
+<td align="right">0.29</td>
+<td align="right">-0.50</td>
+<td align="right">0.25</td>
+</tr>
+<tr>
+<td align="left">X9..RAD</td>
+<td align="right">0.69</td>
+<td align="right">0.74</td>
+<td align="right">-0.31</td>
+<td align="right">0.60</td>
+<td align="right">-0.01</td>
+<td align="right">0.61</td>
+<td align="right">-0.21</td>
+<td align="right">0.46</td>
+<td align="right">-0.49</td>
+<td align="right">1.00</td>
+<td align="right">0.91</td>
+<td align="right">0.46</td>
+<td align="right">-0.44</td>
+<td align="right">0.49</td>
+<td align="right">-0.38</td>
+</tr>
+<tr>
+<td align="left">X10..TAX</td>
+<td align="right">0.67</td>
+<td align="right">0.73</td>
+<td align="right">-0.31</td>
+<td align="right">0.72</td>
+<td align="right">-0.04</td>
+<td align="right">0.67</td>
+<td align="right">-0.29</td>
+<td align="right">0.51</td>
+<td align="right">-0.53</td>
+<td align="right">0.91</td>
+<td align="right">1.00</td>
+<td align="right">0.46</td>
+<td align="right">-0.44</td>
+<td align="right">0.54</td>
+<td align="right">-0.47</td>
+</tr>
+<tr>
+<td align="left">X11..PTRA</td>
+<td align="right">0.29</td>
+<td align="right">0.34</td>
+<td align="right">-0.39</td>
+<td align="right">0.38</td>
+<td align="right">-0.12</td>
+<td align="right">0.19</td>
+<td align="right">-0.36</td>
+<td align="right">0.26</td>
+<td align="right">-0.23</td>
+<td align="right">0.46</td>
+<td align="right">0.46</td>
+<td align="right">1.00</td>
+<td align="right">-0.18</td>
+<td align="right">0.37</td>
+<td align="right">-0.51</td>
+</tr>
+<tr>
+<td align="left">X12..B</td>
+<td align="right">-0.30</td>
+<td align="right">-0.38</td>
+<td align="right">0.18</td>
+<td align="right">-0.36</td>
+<td align="right">0.05</td>
+<td align="right">-0.38</td>
+<td align="right">0.13</td>
+<td align="right">-0.27</td>
+<td align="right">0.29</td>
+<td align="right">-0.44</td>
+<td align="right">-0.44</td>
+<td align="right">-0.18</td>
+<td align="right">1.00</td>
+<td align="right">-0.37</td>
+<td align="right">0.33</td>
+</tr>
+<tr>
+<td align="left">X13..LSTA</td>
+<td align="right">0.26</td>
+<td align="right">0.55</td>
+<td align="right">-0.41</td>
+<td align="right">0.60</td>
+<td align="right">-0.05</td>
+<td align="right">0.59</td>
+<td align="right">-0.61</td>
+<td align="right">0.60</td>
+<td align="right">-0.50</td>
+<td align="right">0.49</td>
+<td align="right">0.54</td>
+<td align="right">0.37</td>
+<td align="right">-0.37</td>
+<td align="right">1.00</td>
+<td align="right">-0.74</td>
+</tr>
+<tr>
+<td align="left">X14..MEDV</td>
+<td align="right">-0.23</td>
+<td align="right">-0.38</td>
+<td align="right">0.36</td>
+<td align="right">-0.48</td>
+<td align="right">0.18</td>
+<td align="right">-0.43</td>
+<td align="right">0.70</td>
+<td align="right">-0.38</td>
+<td align="right">0.25</td>
+<td align="right">-0.38</td>
+<td align="right">-0.47</td>
+<td align="right">-0.51</td>
+<td align="right">0.33</td>
+<td align="right">-0.74</td>
+<td align="right">1.00</td>
+</tr>
+</tbody></table>
+
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+    <slide class="backdrop"></slide>
+  </slides>
+  <div class="pagination pagination-small" id='io2012-ptoc' style="display:none;">
+    <ul>
+      <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=1 title='NA'>
+         1
+      </a>
+    </li>
+  </ul>
+  </div>  <!--[if IE]>
+    <script 
+      src="http://ajax.googleapis.com/ajax/libs/chrome-frame/1/CFInstall.min.js">  
+    </script>
+    <script>CFInstall.check({mode: 'overlay'});</script>
+  <![endif]-->
+</body>
+  <!-- Load Javascripts for Widgets -->
+  
+  <!-- LOAD HIGHLIGHTER JS FILES -->
+  <script src="http://slidifylibraries2.googlecode.com/git/inst/libraries/highlighters/highlight.js/highlight.pack.js"></script>
+  <script>hljs.initHighlightingOnLoad();</script>
+  <!-- DONE LOADING HIGHLIGHTER JS FILES -->
+   
+  </html>

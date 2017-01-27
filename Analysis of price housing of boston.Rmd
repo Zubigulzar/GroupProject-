@@ -7,10 +7,8 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-getwd()
-setwd("/Users/elena/Desktop/GroupProject")
-source("CopyOfAnalyticsLibraries/library.R")
-source("CopyOfAnalyticsLibraries/heatmapOutput.R")
+source("library.R")
+source("heatmapOutput.R")
 ```
 
 ##This doccument is the result of a Survey among 506 respondent
@@ -20,7 +18,7 @@ maintained at Carnegie Mellon University
 <br>   Number of Attributes: 13 continuous attributes (including "class"
 attribute "MEDV"), 1 binary-valued attribute 
 
-<br1. CRIM      per capita crime rate by town
+<br> 1. CRIM      per capita crime rate by town
     2. ZN        proportion of residential land zoned for lots over 
                  25,000 sq.ft.
     3. INDUS     proportion of non-retail business acres per town
@@ -40,19 +38,18 @@ attribute "MEDV"), 1 binary-valued attribute
     
     
     Target variable to predict: pricing of house MEDIAN
-    
-```{r 
+```{r}
 
-myData <- read.csv(file = "/DATA/housing.data.csv", header = TRUE, sep=";")
+myData <- read.csv(file = "DATA/housing.data.csv", header = TRUE, sep=";")
 
 View(myData, header=FALSE)
-Price_of_Houses <- housing.data[,14]
+Price_of_Houses <- myData[,14]
 ID<-c(1:506)
 MyDataID <-cbind(ID,myData)
 plot(MyDataID[,c(1,14)])
 summary(MyDataID[,14])
-
 ```
+
 
 
 ####Questions
@@ -118,4 +115,5 @@ colnames(thecor)<-colnames(ProjectDataFactor)
 rownames(thecor)<-colnames(ProjectDataFactor)
 
 knitr::kable(round(thecor,2))
+
 ```
