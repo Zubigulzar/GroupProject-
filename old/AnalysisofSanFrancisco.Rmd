@@ -1,0 +1,171 @@
+---
+title: "AnalysisofSanFranciscoAirport"
+author: "Giusti Elena"
+date: ""
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+getwd()
+
+source("CopyOfAnalyticsLibraries/library.R")
+source("CopyOfAnalyticsLibraries/heatmapOutput.R")
+```
+
+##This doccument is a re
+
+    
+    Target variable to predict: pricing of house MEDIAN
+    
+```{r, echo=FALSE}
+
+myData <- read.csv(file =  ", header = TRUE, sep=";")
+# This are the project data with an added column of ID
+
+View(myData, header=FALSE)
+Price_of_Houses <- myData[,14]
+ID<-c(1:506)
+MyDataID <-cbind(ID,myData)
+
+#HERE IS EXPLAINED THAT IS THE  Median value of owner-occupied homes in $1000's the value to identify
+
+plot(MyDataID[,c(1,14)])
+summary(MyDataID[,14])
+
+```
+
+
+####Questions
+
+#<br>1.What are the main factors that influence the price of house in Boston?
+#<br>2.Which are the main cluster of houses that can be identify?
+#<br>3.What is the best predictions of the relative importance of those factors?( regression)
+
+
+## Step 1: Confirm data is metric
+
+```{r, echo=FALSE}
+
+ProjectData=data.matrix(MyDataID) 
+MIN_VALUE=0.5
+max_data_report = 10
+colnames(ProjectData)
+
+factor_attributes_used= c(2:14)
+
+# Please ENTER the selection criterions for the factors to use. 
+# Choices: "eigenvalue", "variance", "manual"
+factor_selectionciterion = "eingenvalue"
+
+# Please ENTER the desired minumum variance explained 
+# (ONLY USED in case "variance" is the factor selection criterion used). 
+minimum_variance_explained = 65  # between 1 and 100
+
+# Please ENTER the number of factors to use 
+# (ONLY USED in case "manual" is the factor selection criterion used).
+manual_numb_factors_used = 4
+
+# Please ENTER the rotation eventually used (e.g. "none", "varimax", "quatimax", "promax", "oblimin", "simplimax", and "cluster" - see help(principal)). Defauls is "varimax"
+rotation_used="varimax"
+
+factor_attributes_used = unique(sapply(factor_attributes_used,function(i) min(ncol(ProjectData), max(i,1))))
+ProjectDataFactor=ProjectData[,factor_attributes_used]
+ProjectDataFactor <- ProjectData <- data.matrix(ProjectDataFactor)
+```
+
+## Step 1: Confirm data is metric
+
+```{r}
+knitr::kable(round(my_summary(ProjectDataFactor), 2))
+
+```
+## Step 2: Scale the  data
+```{r, echo=TRUE, tidy=TRUE}
+ProjectDatafactor_scaled=apply(ProjectDataFactor,2, function(r) {if (sd(r)!=0) res=(r-mean(r))/sd(r) else res=0*r; res})
+```
+Notice now the summary statistics of the scaled dataset:
+
+```{r}
+knitr::kable(round(my_summary(ProjectDatafactor_scaled), 2))
+```
+
+## Step 3:  Check correlations 
+Check for correlation
+
+```{r}
+thecor = round(cor(ProjectDataFactor),2)
+colnames(thecor)<-colnames(ProjectDataFactor)
+rownames(thecor)<-colnames(ProjectDataFactor)
+
+knitr::kable(round(thecor,2))
+
+```
+
+Apply the facto analysis, set with eingvalue
+
+```{r}
+UnRotated_Results<-principal(ProjectDataFactor, nfactors=ncol(ProjectDataFactor), rotate="none",score=TRUE)
+UnRotated_Factors<-round(UnRotated_Results$loadings,2)
+UnRotated_Factors<-as.data.frame(unclass(UnRotated_Factors))
+colnames(UnRotated_Factors)<-paste("Component",1:ncol(UnRotated_Factors),sep=" ")
+```
+
+```{r}
+Variance_Explained_Table_results<-PCA(ProjectDataFactor, graph=FALSE)
+Variance_Explained_Table<-Variance_Explained_Table_results$eig
+Variance_Explained_Table_copy<-Variance_Explained_Table
+
+
+rownames(Variance_Explained_Table) <- paste("Component", 1:nrow(Variance_Explained_Table))
+colnames(Variance_Explained_Table) <- c("Eigenvalue", "Pct of explained variance", "Cumulative pct of explained variance")
+
+knitr::kable(round(Variance_Explained_Table, 2))
+```
+
+```{r figure01}
+eigenvalues  <- Variance_Explained_Table[, "Eigenvalue"]
+df           <- cbind(as.data.frame(eigenvalues), c(1:length(eigenvalues)), rep(1, length(eigenvalues)))
+colnames(df) <- c("eigenvalues", "components", "abline")
+ggplot(melt(df, id="components"), aes(x=components, y=value, colour=variable)) + geom_line()
+```
+
+
+
+```{r}
+
+Rotated_Results<-principal(ProjectDatafactor_scaled, nfactors=max(3), rotate=rotation_used,score=TRUE)
+Rotated_Factors<-round(Rotated_Results$loadings,2)
+Rotated_Factors<-as.data.frame(unclass(Rotated_Factors))
+colnames(Rotated_Factors)<-paste("Component",1:ncol(Rotated_Factors),sep=" ")
+
+sorted_rows <- sort(Rotated_Factors[,1], decreasing = TRUE, index.return = TRUE)$ix
+Rotated_Factors <- Rotated_Factors[sorted_rows,]
+
+knitr::kable(Rotated_Factors)
+```
+
+Here is the result of 3 principal factoor chosen 
+
+```{r echo=FALSE, comment=NA, warning=FALSE, message=FALSE,results='asis'}
+Rotated_Factors_thres <- Rotated_Factors
+Rotated_Factors_thres[abs(Rotated_Factors_thres) < MIN_VALUE]<-NA
+colnames(Rotated_Factors_thres)<- colnames(Rotated_Factors)
+rownames(Rotated_Factors_thres)<- rownames(Rotated_Factors)
+
+knitr::kable(Rotated_Factors_thres)
+```
+
+
+Component nr 1 low status houses:
+
+1. CRIM      per capita crime rate by town
+3. INDUS     proportion of non-retail business acres per town
+7. AGE       proportion of owner-occupied units built prior to 1940
+5. NOX       nitric oxides concentration (parts per 10 million)
+13. LSTAT    % lower status of the population
+ 
+ 
+ Component nr 2 : hight value
+
+
