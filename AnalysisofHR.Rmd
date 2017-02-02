@@ -11,32 +11,50 @@ knitr::opts_chunk$set(echo = TRUE)
 getwd()
 source("CopyOfAnalyticsLibraries/library.R")
 source("CopyOfAnalyticsLibraries/heatmapOutput.R")
-
+library(corrplot)
+library(randomForest)
+library(readr)
+library(psych)
+library(corrplot)
+library(dplyr)
+library(tidyr)
+library(tabplot)
+library(ggplot2)
+library(gridExtra)
+library(knitr)
+library(vcd)
+library(caret)
+library(randomForest)
+library(partykit)
+library(dplyr)
+library(ggvis)
+library(DT)
 ```
 
-###Human Resources Analytics
+
+#Human Resources Analytics
 ##Why are our best and most experienced employees leaving prematurely?
 
 <br>This is a dataset that includes 14999 observation of single employees
 <br>Fields in the dataset include:
 
-<br>Employee satisfaction level
-<br>Last evaluation
-<br>Number of projects
-<br>Average monthly hours
-<br>Time spent at the company
-<br>Whether they have had a work accident
-<br>Whether they have had a promotion in the last 5 years
-<br>Department
-<br>Salary
-<br>Whether the employee has left
+<br/>Employee satisfaction level
+<br/>Last evaluation
+<br/>Number of projects
+<br/>Average monthly hours
+<br/>Time spent at the company
+<br/>Whether they have had a work accident
+<br/>Whether they have had a promotion in the last 5 years
+<br/>Department
+<br/>Salary
+<br/>Whether the employee has left
 
-#The objectives of the project are the followings
-<br>Which of those factors influence the employeers decison to left?
-<br>Who will leave next?
-<br>Is it possible to target with some specific strategy some department?
+##The objectives of the project are the followings
+<br/>Which of those factors influence the employeers decison to left?
+<br/>Who will leave next?
+<br/>Is it possible to target with some specific strategy some department?
 
-#The project is divided in the following step
+##The project is divided in the following step
 <br>Step 1) Analyse actual state of the company HR indicators
 - Clean the data
 - Describe the data 
@@ -48,49 +66,146 @@ source("CopyOfAnalyticsLibraries/heatmapOutput.R")
 -Randomtree model
 
 
-##>Step 1)Analyse actual state of the company HR indicator
-```{r, echo=TRUE,eval=FALSE}
-myData <- read.csv(file = "DATA/HR_comma_sep.csv", header = TRUE, sep=",")
-View(myData, header=TRUE)
-colnames(myData)
 
+
+##Step 1: Analyse actual state of the company HR indicator
+```{r, echo=FALSE,eval=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+myData = read.table("DATA/HR_comma_sep.csv", header = T,sep=',')
+head(myData)
+View(myData, header=T)
+colnames(myData)
 print(myData[1:10])
+
 ```
 Looking at data we can make the following assumptions related the nature of the 10 variables
 
-<br>satisfaction_level: A numeric indictor, presumably filled out by the employee.
-<br>last_evaluation: A numeric indicator, presumably filled in by the employee’s manager.
-<br>number_project: A integer - perhaps the number of projects the employee has worked on. 
-<br>average_monthly_hours: The number of hours they work in the month
+<br/>satisfaction_level: A numeric indictor, presumably filled out by the employee.
+<br/>last_evaluation: A numeric indicator, presumably filled in by the employee’s manager.
+<br/>number_project: A integer - perhaps the number of projects the employee has worked on. 
+<br/>average_monthly_hours: The number of hours they work in the month
 time_spend_company: An integer value, perhaps years of service.
-<br>Work_accident: Looks like a boolean value, probably whether(1) or not(0) they had an accident.
-<br>left: Looks like a boolean value, leave (1), not leave(0)
+<br/>Work_accident: Looks like a boolean value, probably whether(1) or not(0) they had an accident.
+<br/>left: Looks like a boolean value, leave (1), not leave(0)
 promoted_last_5years: Looks like a boolean value, promoted(1), not promoted(0)
-<br>sales: Is a categorical variable assessing the department (sales,technical...)
-<br>salary: Looks like a 3-level salary score (low, medium, high)
+<br/>sales: Is a categorical variable assessing the department (sales,technical...)
+<br/>salary: Looks like a 3-level salary score (low, medium, high)
 
-```{r, echo=TRUE,eval=TRUE}
+### Data quality report
+
+```{r, echo=FALSE,eval=TRUE}
 #We assess if there are any missing data and perform basic descriptive statistic on the data
 
 summary(myData)
+
 ```
+<br/>
+<hr/>
+<br/>
 
-<br>From basic statistical analysis we see that the overall satisfaction of the company is really low around 63% and that approximately 24% of the employees left. This brings us to the following step we would like therefore to understand bettwe who are the employees that are leaving
+From basic statistical analysis we see that the overall satisfaction of the company is really low around 63% and that approximately 24% of the employees left. This brings us to the following step we would like therefore to understand bettwe who are the employees that are leaving
 
-# Who is leaving
+##Step 2: visualisations
 
-<br>We will start our analysis looking more deeply to a subset of employers that are leaving
+<br/>
 
-```{r, echo=TRUE}
-hr_hist <- filter(myData,left==1)
+We will start our analysis looking more deeply to a set of all emplyees 
+
+
+
+### First visualisations of the employees who left
+
+We will start our analysis looking more deeply to a subset composed of all emplyees who left
+
+
+In the total of 15 000 employees that compose our database, here are the people that have left:
+
+```{r, echo=FALSE,eval=TRUE}
+
+employeesleft <- myData %>% filter(left==1)
+nrow(employeesleft)
+
+```
+<br/>
+<br/>
+<br/>
+<br/>
+
+```{r, echo=FALSE,eval=TRUE}
+Allemployees <- myData %>% select(satisfaction_level:promotion_last_5years)
+thecor <- cor(Allemployees)
+cex.before <- par("cex")
+corrplot(thecor, method = "circle" , type = "full", title = "Correlation Heat map of all data" , tl.cex = 1/par("cex"), cl.cex = 1/par("cex"), order = "original", number.font = 2 , tl.col = "red", tl.srt = 30, mar=c(0,0,2,0))
+par(cex = cex.before)
+```
+<br/>
+<br/>
+<br/>
+
+```{r, echo=FALSE,eval=TRUE}
+hr_valuable_people <- myData %>% filter(last_evaluation >= 0.65 | time_spend_company >= 3 | number_project > 5)
+hr_valuable_people2 <- hr_valuable_people %>% select(satisfaction_level, number_project: promotion_last_5years)
+M <- cor(hr_valuable_people2)
+cex.before <- par("cex")
+corrplot(M, method = "circle" , type = "full", title = "Valuable people" , tl.cex = 1/par("cex"), cl.cex = 1/par("cex"), order = "original", number.font = 2 , tl.col = "red", tl.srt = 30, mar=c(0,0,2,0))
+par(cex = cex.before)
+```
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+
+##Step 3: Analysing Who is leaving?
+
+Number of people valuable to the company leaving. The screening criterea is that the employees have worked for company for more than 3 years and have good last evaluation results >0.65 
+
+```{r, echo=FALSE,eval=TRUE}
+hr_valuable_people <- employeesleft %>% filter(last_evaluation >= 0.65 | time_spend_company >= 3 | number_project > 5)
+  nrow(hr_valuable_people)
+```
+<br/>
+<br/>
+
+```{r, echo=FALSE,eval=TRUE}
+thecor2 <- cor(employeesleft[c(1,2,3,4,5,6,8)])
+corrplot(thecor2, method="circle" , title = "Correlation Heat map of employees who left" , tl.cex = 1/par("cex"), cl.cex = 1/par("cex"), order = "original", number.font = 2 , tl.col = "red", tl.srt = 30, mar=c(0,0,2,0))
+```
+<br/>
+<br/>
+<br/>
+<br/>
+
+Let's create a data frame with only the people that have left the company, so we can visualise what is the distribution of each features:
+
+```{r, echo=FALSE,eval=TRUE}
+
 par(mfrow=c(1,3))
-hist(hr_hist$satisfaction_level,col="#3090C7", main = "Satisfaction level") 
-hist(hr_hist$last_evaluation,col="#3090C7", main = "Last evaluation")
-hist(hr_hist$average_montly_hours,col="#3090C7", main = "Average montly hours")
+hist(employeesleft$satisfaction_level,col="#3090C7", main = "Satisfaction level") 
+hist(employeesleft$last_evaluation,col="#3090C7", main = "Last evaluation")
+hist(employeesleft$average_montly_hours,col="#3090C7", main = "Average montly hours")
+```
+<br/>
+<br/>
+<br/>
+<br/>
+
+We can see why we don't want to retain everybody. Some people don't work well as we can see from their evaluation, but clearly there are also many good workers that leave.
+
+```{r, echo=FALSE,eval=TRUE}
+
+par(mfrow=c(1,3))
+hist(employeesleft$Work_accident,col="#3090C7", main = "Work accident")
+plot(employeesleft$salary,col="#3090C7", main = "Salary")
+```
+```{r, echo=FALSE,eval=TRUE}
+par(oma=c(4,0,0,0))
+plot(employeesleft$sales,col="#3090C7", main = "Departments", las=2)
 
 ```
 
-<br>From the previous histograms we can colcude that not only employers with low satisfaction level and bad evaluation are leaving.
+
+From the previous histograms we can colcude that not only employers with low satisfaction level and bad evaluation are leaving.
 
 Looking at data it seems that none of the distribution is normal but show strong polarization:
 
@@ -98,28 +213,19 @@ Looking at data it seems that none of the distribution is normal but show strong
 2) The distribution of employers that are leaving is quite polirize on employers that are medium on satisfaction.
 3)Employers that work less seems more willing to leave
 
-```{r, echo=TRUE}
-par(mfrow=c(1,2))
-hist(hr_hist$Work_accident,col="#3090C7", main = "Work accident")
-plot(hr_hist$salary,col="#3090C7", main = "Salary")
-```
-<br>From a first analysis it  seems that the number of work accident and the salary are factors that might influence more directly the employers decision to leave
+<br/>
+From a first analysis it  seems that the number of work accident and the salary are factors that might influence more directly the employers decision to leave
 
 
-<br> ?????? Looking more deeply to relation between satisfaction level and decision to leaving:
-
-```{r, echo=TRUE}
-
-boxplot(myData[,1],myData[,7], main="Relation between satsfaction and left",xlab="left",ylab="satisfaction_level")
-```
+<br/>  Looking more deeply to relation between satisfaction level and decision to leaving:
 
 
-##Step 2) Analyse correlation and main factor definining HR indicators
+##Step 4: Principal Component Analysis
 
 To perform correlation we need first of all to normalize those data that are not metric and to drop the value that we want to predict (left) from the ananlysis
 
 
-```{r, echo=TRUE}
+```{r, echo=FALSE,eval=TRUE}
 myData2 <- myData[,c(1,2,3,4,5,6,8,9,10)]
 colnames(myData2)
 myData2$sales <- as.factor(myData2$sales)
@@ -129,7 +235,7 @@ ProjectData <- data.matrix(myData2)
 ```
 
 
-```{r, echo=TRUE}
+```{r, echo=FALSE,eval=TRUE}
 
 MIN_VALUE=0.5
 max_data_report = 10
@@ -162,41 +268,32 @@ ProjectDataFactor <- ProjectData <- data.matrix(ProjectDataFactor)
 After having done this adjustments we can now confirm that data are metric.
 However we need to scale the data to have a more homogeneus dataset
 
-```{r}
+```{r echo=FALSE, tidy=TRUE}
 knitr::kable(round(my_summary(ProjectDataFactor), 2))
 ```
-```{r, echo=TRUE, tidy=TRUE}
+```{r, echo=FALSE, tidy=TRUE}
 ProjectDatafactor_scaled=apply(ProjectDataFactor,2, function(r) {if (sd(r)!=0) res=(r-mean(r))/sd(r) else res=0*r; res})
 ```
 Notice now the summary statistics of the scaled dataset:
 
-```{r}
+```{r echo=FALSE, tidy=TRUE}
 knitr::kable(round(my_summary(ProjectDatafactor_scaled), 2))
 ```
 
 
 We can therefore look to correlation level we can see that those are really low at few factor show correlation>3
 
-
-
-```{r}
-thecor = round(cor(ProjectDatafactor_scaled),2)
-colnames(thecor)<-colnames(ProjectDatafactor_scaled)
-rownames(thecor)<-colnames(ProjectDatafactor_scaled)
-
-knitr::kable(round(thecor,2))
-
-```
 We can then apply factor analysis, after some trial we understand that prediction through eingvalue gives the best assessment.
 
-```{r}
+
+```{r echo=FALSE, tidy=TRUE}
 UnRotated_Results<-principal(ProjectDataFactor, nfactors=ncol(ProjectDataFactor), rotate="none",score=TRUE)
 UnRotated_Factors<-round(UnRotated_Results$loadings,2)
 UnRotated_Factors<-as.data.frame(unclass(UnRotated_Factors))
 colnames(UnRotated_Factors)<-paste("Component",1:ncol(UnRotated_Factors),sep=" ")
 ```
 
-```{r}
+```{r echo=FALSE, tidy=TRUE}
 Variance_Explained_Table_results<-PCA(ProjectDataFactor, graph=FALSE)
 Variance_Explained_Table<-Variance_Explained_Table_results$eig
 Variance_Explained_Table_copy<-Variance_Explained_Table
@@ -207,7 +304,7 @@ colnames(Variance_Explained_Table) <- c("Eigenvalue", "Pct of explained variance
 
 knitr::kable(round(Variance_Explained_Table, 2))
 ```
-```{r figure01}
+```{r figure01, echo=FALSE, tidy=TRUE}
 eigenvalues  <- Variance_Explained_Table[, "Eigenvalue"]
 df           <- cbind(as.data.frame(eigenvalues), c(1:length(eigenvalues)), rep(1, length(eigenvalues)))
 colnames(df) <- c("eigenvalues", "components", "abline")
@@ -215,7 +312,7 @@ ggplot(melt(df, id="components"), aes(x=components, y=value, colour=variable)) +
 
 ```
 
-```{r}
+```{r ,  echo=FALSE, tidy=TRUE}
 
 Rotated_Results<-principal(ProjectDatafactor_scaled, nfactors=max(3), rotate=rotation_used,score=TRUE)
 Rotated_Factors<-round(Rotated_Results$loadings,2)
@@ -228,7 +325,7 @@ Rotated_Factors <- Rotated_Factors[sorted_rows,]
 knitr::kable(Rotated_Factors)
 ```
 
-```{r}
+```{r echo=FALSE, tidy=TRUE}
 
 Rotated_Factors_thres <- Rotated_Factors
 Rotated_Factors_thres[abs(Rotated_Factors_thres) < MIN_VALUE]<-NA
@@ -238,11 +335,6 @@ rownames(Rotated_Factors_thres)<- rownames(Rotated_Factors)
 knitr::kable(Rotated_Factors_thres)
 ```
 
-
-
-
-Notice now the summary statistics of the scaled dataset:
-
 Based on eingvalue we can see thet the number of principal components are 3 
 
 Component 1: number of project, montly hours, last evaluation we can call this component commitment
@@ -250,34 +342,161 @@ Component 2 : only satisfaction
 Component 3: salary+promotion we can call this component remunaration
 
 
-CONCLUSION: principal component analisys allow to easily have a lower number of factor to describe the dataset, however given the low correlation measure and the limited number of dependent variable we can conclude is not particularly useful in this case.
+CONCLUSION: principal component analisys allow to easily have a lower number of factor to describe the dataset, however the limited number of dependent variable we can conclude is not particularly useful in this case.
 
-##Step 3) Build a regression model to estimate who will be more likely to leave
-Now we will try to built a regression model to predict who will more possibly leave
-
+##Step 5: Build a regression model to estimate who will be more likely to leave
 
 
-idx <- sample (nrow(myData),0.66*nrow(myData))
+```{r ,echo=FALSE, tidy=TRUE}
+myData3 <- read.csv("DATA/HR_comma_sep.csv")
+colnames(myData3) <- c("satisfaction","evaluation","project","hours","years","accident",
+                  "left","promotion","sales","salary")
 
-# Make a few modications
-myData %>% 
-  mutate(
-    left = factor(left, labels = c("Remain", "Left")),
-    salary = ordered(salary, c("low", "medium", "high"))
-  ) -> 
-  d
+myData3$sales <- as.factor(myData3$sales)
+myData3$salary <- factor(myData3$salary,levels=c("low","medium","high"),ordered=T)
+des <- describeBy(myData3,list(left=myData3$left))
+for(i in names(des)){
+  des[[i]] <- as.data.frame(sapply(des[[i]],round,1))
+}
+kable(des[[1]])
+kable(des[[2]])
+```
 
-train <- d[idx, ]
-test <- d[-idx, ]
+Here we can have a overview of the data; for example, there are `r table(myData3$left)[2]` observations in `1` group, values of mean and median of `satisfaction` in `1` group is smaller than `0` group's. The correlation plot show some relationships of first 8 variables. Obviously, with lower satisfaction level, employees will have stronger desire to leave. If someone can deal with more projects and spend more time on work, he or she will obtain higher evaluation.
+
+### Predicting Who Will Leave?
+
+we may find the evidence who will leave next.
+
+```{r tableplot , echo=FALSE, tidy=TRUE}
+require(tabplot)
+myData3$left <- as.factor(myData3$left)
+myData3$accident <- as.factor(myData3$accident)
+myData3$promotion <- as.factor(myData3$promotion)
+tabplot::tableplot(myData3,sortCol=left)
+```
+
+Wile the table plot can show us enough features, We should do some more plots to analyse further
+
+```{r echo=FALSE, tidy=TRUE}
+g1 <- ggplot(myData3,aes(x=hours,group=left))+
+  geom_histogram(aes(fill=left),alpha=.4)
+g2 <- ggplot(myData3,aes(x=evaluation,group=left))+
+  geom_histogram(aes(fill=left),alpha=.4)
+g3 <- ggplot(myData3,aes(x=satisfaction,group=left))+
+  geom_histogram(aes(fill=left),alpha=.4)
+grid.arrange(g1,g2,g3,nrow=3)
+```
+
+```{r sat,echo=FALSE}
+sat <- myData3 %>% select(satisfaction,left) %>% 
+  filter(left=="1",satisfaction<.5) %>% 
+  summarise(n()/nrow(myData3[myData3$left=="1",]))
+sat <- paste(round(sat,4)*100,"%")
+```
 
 
-output.forest <- randomForest(factor(left) ~ satisfaction_level + last_evaluation + number_project + average_montly_hours + time_spend_company + Work_accident,  data = test)
-test$prediction <- predict(output.forest, newdata=test)
-
-      
-`
+People with too few or too many hours per month on work tend to quit. The former may have little challenge in work and just get bored. On the contrary, the latter dont't want to spend much time on work. Employees who left get lower or higher last evaluation. Sense of satisfaction seems to be another factor; Satisfation level of `r sat` employees who left is less than 0.5.
 
 
-Then we'll train a single decision tree using `rpart` to and evaluate to see how good our fit is.
+
+In the former correlation plot, there is a kind of positive correlativity between `project` and `hours`, so the two variables maybe share the similar impact. People with few projets( less than 3) and too many projects( more than 5) tend to leave. In the left group, number of employees with three-year experience is 1586, almost half of the group. But, more than 50% employees with five-year experience quited, which is big loss for a company.
+
+```{r ,echo=FALSE, tidy=TRUE}
+mosaic(~accident+left+salary,data=myData3,
+       highlighting = "left",highlighting_fill=c("lightblue","pink"),
+       direction=c("h","v","h"))
+```
+
+Interestingly, employees with stronger desire to leave tend to have no accident in their work. Low salary also contributes to  resigning. Given variable `promotion`, the value's distribution is so uneven; we can see, only 319 out of 14999 employees have gotten promotion in the last five years. I will just eliminate the variable `promotion` in prediction process.
+
+### Reasons of Employees Leaving?
+
+Here are some reasons I've gotten from above analysis:
+
+- Lower satisfication level is significant;
+
+- Few or too many projects, little or too much time on work;
+
+- Low salary;
+
+- Three-to-six year for company is the risk time;
+
+- Few chances to get promotion( I just guess).
+
+### Who Are Valuable Employees And Why Do They Leave?
+
+In my view, the employees with evaluation `>=0.65`, equal or more than 3-year-experience in the company and equal or more than 5 projects in hand can be considered to be experienced and valuable ones for a company. More than half of the experienced ones left. It seems that they suffer from:
+
+- low level of satisfaction
+
+- too much work
+
+- no promotion
+
+- low salary
+
+
+```{r ,echo=FALSE, tidy=TRUE}
+valuable <- myData3[myData3$evaluation>=.65 & myData3$years>=3 & myData3$project>=5,]
+prop.table(table(valuable$left))
+tableplot(valuable,sortCol=left,nBins=60)
+ggplot(valuable,aes(x=left,y=satisfaction,fill=left))+
+  geom_boxplot()+
+  geom_point(position=position_jitter(width=.2),shape=1,alpha=.4)
+```
+
+We can find some employees with high sense of satisfaction also left in the box plot. The table plot shows they sustain the same problems with other left ones. Maybe there are still some reasons out of the dataset.
+
+
+##Step 6: Train And Prediction
+
+It's time for us to model. We may get a good one to predict who will leave next.We will split the dataset into two parts, `train` and `test`. A classification tree will be built firstly, then forest.
+
+```{r ,echo=FALSE, tidy=TRUE}
+myData3 <- select(myData3,-promotion)
+obs <- sample(1:nrow(myData3),10000)
+train <- myData3[obs,]
+test <- myData3[-obs,]
+
+trControl <- trainControl(method="repeatedcv",
+                          number=5,
+                          repeats=3)
+set.seed(112)
+rpart_mdl <- train(left~.,data=train,
+                   method="rpart",
+                   trControl=trControl,
+                   tuneGrid=data.frame(cp=c(.01,.02,.03)))
+
+rpart_mdl
+plot(as.party(rpart_mdl$finalModel))
+```
+
+A single tree can get a score like `r rpart_mdl$results[1,2]`, which is so unbelievable. The original dataset is so friendly. Some variables are more important in prediction as we can see from tree plot, such as, `satisfication`, `years`, `evaluation` and `hours`. Now we model a random forest.
+
+```{r , echo=FALSE, tidy=TRUE}
+set.seed(112)
+rf_mdl <- randomForest(left~.,data=train,mtry=7,importance=T)
+
+rf_pred <- predict(rf_mdl,test,type="response")
+confusionMatrix(rf_pred,test$left)
+```
+
+So, `rf_mdl` works better, and which variable is the most important? From importance of variables, we can infer reasons that employees left, especially experienced and valuable ones.
+
+```{r imp, echo=FALSE, tidy=TRUE}
+importance <- data.frame(var=row.names(importance(rf_mdl)),importance=importance(rf_mdl)[,4])
+ggplot(importance,aes(x=reorder(var,importance),y=importance))+
+  geom_bar(stat="identity",aes(fill=importance))+
+  coord_flip()+
+  labs(title="Importance of Variables")
+```
+
+##Step 7: Conclusion
+
+In our opinion Improving level of satisfaction is the key to keep employees remain. While, reasonable workload and working time, promotion and appropriate salary increasing can be useful measures to achieve the key. There is no doubt a valuable employee is important to a company, whether he or she is an experienced or potential one.
+
+
 
 https://www.kaggle.com/msjgriffiths/d/ludobenistant/hr-analytics/explore-explain-density-decision-trees
+
